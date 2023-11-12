@@ -9,7 +9,7 @@ INPUT_IMAGE_PATH = "input_images/"
 OUTPUT_IMAGE_PATH = "output_images/"
 
 def getGridFromImg(image_path, cell_len):
-    weight_color_lookup = {(185, 122, 87) : 0, (63, 72, 204): 2, (127, 127, 127): 200}
+    weight_color_lookup = {(185, 122, 87) : 1, (63, 72, 204): 2, (127, 127, 127): 200}
     endpoint_color_lookup = {(237, 28, 36): "start", (34, 177, 76): "end"}
     s = (-1, -1)
     e = (-1, -1)
@@ -49,13 +49,13 @@ def getGridFromImg(image_path, cell_len):
 
 def saveUpdatedImgFromGrid(min_path, org_img_pixels, algo_type, min_dist):
     pixels = org_img_pixels.copy()
-    for y in range(len(min_path)):
-        for x in range(len(min_path)):
+    for y in range(len(pixels)):
+        for x in range(len(pixels[0])):
             if min_path[y][x] == Util.gridSolver.PATH_SYMBOL:
                 pixels[y][x] = (0, 0, 0)
     img = Image.fromarray(np.uint8(pixels), 'RGB')
     
-    print(f"{algo_type} dist:\t", min_dist)
+    print(f"{algo_type} dist:\t", round(min_dist, 2))
     stem, ext = filename.split('.')
     img.save(os.path.join(OUTPUT_IMAGE_PATH, f"{stem}_{algo_type}.{ext}"))
 

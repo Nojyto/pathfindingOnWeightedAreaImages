@@ -1,8 +1,8 @@
 import heapq
 import func_timeout
 import math
+import time
 from collections import deque
-
 
 ALGO_TLE_LIMIT = -1
 
@@ -14,18 +14,26 @@ START_SYMBOL = 'S'
 END_SYMBOL = 'E'
 PATH_SYMBOL = '#'
 EMPTY_SYMBOL = '.'
+VISITED_SYMBOL = '-'
 
-
-def TLE(func):
+def TimeoutAndMonitor(func):
     def function_wrapper(*args):
         try:
+            start_time = time.time()
+            min_dist = -1
             if (ALGO_TLE_LIMIT < 0):
-                return func(*args)
+                min_dist, min_path = func(*args)
             else:
-                return func_timeout.func_timeout(ALGO_TLE_LIMIT, func, args=[*args])
+                min_dist, min_path = func_timeout.func_timeout(ALGO_TLE_LIMIT, func, args=[*args])
         except func_timeout.FunctionTimedOut:
             print("Time limit exceeded on function")
-            pass
+        except Exception as e:
+            print(e)
+        else:
+            return min_dist, min_path
+        finally:
+            end_time = round(time.time() - start_time, 3)
+            print(f"{func.__name__:<8}\tmin_dist: {round(min_dist, 2)}\tRT: {end_time}s")
         return -1, []
     return function_wrapper
 
@@ -37,7 +45,11 @@ def construct_path(seen, start, end, N, M):
     eX, eY = end
     pX, pY = end
     
-    # Backtrack on precursors
+    # Mark visited cells
+    for (cX, cY), d in seen.items():
+        minPath[cY][cX] = VISITED_SYMBOL
+    
+    # Backtrack on precursors and mark optimal path
     while not (sX == pX and sY == pY):
         minPath[pY][pX] = PATH_SYMBOL
         pX, pY = seen[(pX, pY)][1]
@@ -49,16 +61,14 @@ def construct_path(seen, start, end, N, M):
     return minPath
 
 
-@TLE
+@TimeoutAndMonitor
 def BFS(grid, start, end):
-    # Validate start and end points
-    if start == (-1, -1) or end == (-1, -1):
-        print("Invalid endpoints.")
-        return -1, []
-
     sX, sY = start
     eX, eY = end
     N, M = len(grid[0]), len(grid)
+    # Validate start and end points
+    if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
+        raise Exception("Start or endpoint is out of bounds")
     
     # Initialize the queue with the start position
     q = deque()  # Format: (x, y, prec_x, prec_y)
@@ -78,10 +88,7 @@ def BFS(grid, start, end):
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                if dX != 0 and dY != 0:
-                    nD = seen[(cX, cY)][0] + grid[nY][nX] * math.sqrt(2)
-                else:
-                    nD = seen[(cX, cY)][0] + grid[nY][nX]
+                nD = seen[(cX, cY)][0] + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
                 if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     seen[(nX, nY)] = (nD, (cX, cY))
                     q.append((nX, nY, cX, cY))
@@ -89,16 +96,14 @@ def BFS(grid, start, end):
     return -1, []
 
 
-@TLE
+@TimeoutAndMonitor
 def Dijkstra(grid, start, end):
-    # Validate start and end points
-    if start == (-1, -1) or end == (-1, -1):
-        print("Invalid endpoints.")
-        return -1, []
-
     sX, sY = start
     eX, eY = end
     N, M = len(grid[0]), len(grid)
+    # Validate start and end points
+    if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
+        raise Exception("Start or endpoint is out of bounds")
     
     # Initialize the heap with the start position
     h = []  # Format: (distance, x, y, previous_x, previous_y)
@@ -109,22 +114,18 @@ def Dijkstra(grid, start, end):
         cD, cX, cY, pX, pY = heapq.heappop(h)
 
         # Skip already processed or longer paths
-        if (cX, cY) in seen and cD >= seen[(cX, cY)][0]: continue
+        if (cX, cY) in seen: continue
         seen[(cX, cY)] = [cD, (pX, pY)]
 
         # Check if the end point is reached
         if cX == eX and cY == eY:
-            # Construct the minimum path
             return cD, construct_path(seen, start, end, N, M)
 
         # Explore neighbors
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                if dX != 0 and dY != 0:
-                    nD = cD + grid[nY][nX]*math.sqrt(2)
-                else:
-                    nD = cD + grid[nY][nX]
+                nD = cD + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
                 if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     heapq.heappush(h, (nD, nX, nY, cX, cY))
 
@@ -140,52 +141,41 @@ def euclidean_distance(x1, y1, x2, y2):
     # return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
-@TLE
+@TimeoutAndMonitor
 def Astar(grid, start, end):
-    # Validate start and end points
-    if start == (-1, -1) or end == (-1, -1):
-        print("Invalid endpoints.")
-        return -1, []
-
     sX, sY = start
     eX, eY = end
     N, M = len(grid[0]), len(grid)
+    # Validate start and end points
+    if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
+        raise Exception("Start or endpoint is out of bounds")
     
-    # Initialize the heap with the start position
-    h = []  # Format: (total_cost, current_distance, x, y, previous_x, previous_y)
-    initial_heuristic = euclidean_distance(sX, sY, eX, eY)
-    heapq.heappush(h, (initial_heuristic, grid[sY][sX], sX, sY, sX, sY))
+    heuristic = manhattan_distance if DIR_OF_MOVEMENT == EUCLIDEAN_MOVEMENT else euclidean_distance
+    initial_heuristic = heuristic(sX, sY, eX, eY)
+    # Initialize the queue with the start position
+    h = [] # Format: (heuristic, distance, x, y, previous_x, previous_y)
+    heapq.heappush(h, (initial_heuristic + grid[sY][sX], grid[sY][sX], sX, sY, sX, sY))
     seen = dict()
 
     while h:
         _, cD, cX, cY, pX, pY = heapq.heappop(h)
 
         # Skip already processed or longer paths
-        if (cX, cY) in seen and cD >= seen[(cX, cY)][0]: continue
-        seen[(cX, cY)] = [cD, (pX, pY)]
+        if (cX, cY) in seen: continue
+        seen[(cX, cY)] = (cD, (pX, pY))
         
         # Check if the end point is reached
         if cX == eX and cY == eY:
-            # Construct the minimum path
             return cD, construct_path(seen, start, end, N, M)
 
         # Explore neighbors
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                if dX != 0 and dY != 0:
-                    nD = cD + grid[nY][nX]*math.sqrt(2)
-                else:
-                    nD = cD + grid[nY][nX]
-                heuristic_cost = nD
-                
-                if DIR_OF_MOVEMENT == MANHATTAN_MOVEMENT:
-                    heuristic_cost += manhattan_distance(nX, nY, eX, eY)
-                elif DIR_OF_MOVEMENT == EUCLIDEAN_MOVEMENT:
-                    heuristic_cost += euclidean_distance(nX, nY, eX, eY)
-                    
-                if ((nX, nY) not in seen or nD < seen[(nX, nY)][0]):
-                    heapq.heappush(h, (heuristic_cost, nD, nX, nY, cX, cY))
+                nD = cD + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
+                total_cost = nD + heuristic(nX, nY, eX, eY)
+                if (nX, nY) not in seen:
+                    heapq.heappush(h, (total_cost, nD, nX, nY, cX, cY))
 
     return -1, []
 

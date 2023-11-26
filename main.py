@@ -66,7 +66,7 @@ if __name__ == "__main__":
         if filename.endswith('.png'):
             img_path = os.path.join(INPUT_IMAGE_PATH, filename)
 
-            grid, start, end, new_img_pixels = getGridFromImg(img_path, 0.25)
+            grid, start, end, new_img_pixels = getGridFromImg(img_path, 5)
             
             min_dist, min_path = Util.gridSolver.BFS(grid, start, end)
             img_path_1 = saveUpdatedImgFromGrid(min_path, new_img_pixels, "BFS")

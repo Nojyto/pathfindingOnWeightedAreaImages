@@ -70,6 +70,9 @@ def BFS(grid, start, end):
     if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
         raise Exception("Start or endpoint is out of bounds")
     
+    if start == end:
+        raise Exception("Start and end point overlap")
+    
     # Initialize the queue with the start position
     q = deque()  # Format: (x, y, prec_x, prec_y)
     q.append((sX, sY, sX, sY))
@@ -104,6 +107,9 @@ def Dijkstra(grid, start, end):
     # Validate start and end points
     if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
         raise Exception("Start or endpoint is out of bounds")
+    
+    if start == end:
+        raise Exception("Start and end point overlap")
     
     # Initialize the heap with the start position
     h = []  # Format: (distance, x, y, previous_x, previous_y)
@@ -149,6 +155,9 @@ def Astar(grid, start, end):
     # Validate start and end points
     if not (0 <= sX < N and 0 <= sY < M) or not (0 <= eX < N and 0 <= eY < M):
         raise Exception("Start or endpoint is out of bounds")
+
+    if start == end:
+        raise Exception("Start and end point overlap")
     
     heuristic = manhattan_distance if DIR_OF_MOVEMENT == EUCLIDEAN_MOVEMENT else euclidean_distance
     initial_heuristic = heuristic(sX, sY, eX, eY)
@@ -174,7 +183,7 @@ def Astar(grid, start, end):
             if 0 <= nX < N and 0 <= nY < M:
                 nD = cD + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
                 total_cost = nD + heuristic(nX, nY, eX, eY)
-                if (nX, nY) not in seen:
+                if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     heapq.heappush(h, (total_cost, nD, nX, nY, cX, cY))
 
     return -1, []

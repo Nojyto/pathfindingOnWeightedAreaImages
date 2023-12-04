@@ -8,13 +8,35 @@ ALGO_TLE_LIMIT = -1
 
 MANHATTAN_MOVEMENT = [(1, 0), (-1, 0), (0, 1), (0, -1)]
 EUCLIDEAN_MOVEMENT = [(1, 0), (-1, 0), (0, 1), (0, -1), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-DIR_OF_MOVEMENT = EUCLIDEAN_MOVEMENT
+DOF16_MOVEMENT = [
+    (1, 0), (-1, 0), (0, 1), (0, -1), 
+    (-1, -1), (-1, 1), (1, -1), (1, 1),
+    (2, 1), (2, -1), (-2, 1), (-2, -1),
+    (1, 2), (-1, 2), (1, -2), (-1, -2)
+]
+DOF20_MOVEMENT = [
+    (1, 0), (-1, 0), (0, 1), (0, -1), 
+    (-1, -1), (-1, 1), (1, -1), (1, 1),
+    (2, 1), (2, -1), (-2, 1), (-2, -1),
+    (1, 2), (-1, 2), (1, -2), (-1, -2),
+    (3, 1), (3, -1), (-3, 1), (-3, -1)
+]
+DOF24_MOVEMENT = [
+    (1, 0), (-1, 0), (0, 1), (0, -1), 
+    (-1, -1), (-1, 1), (1, -1), (1, 1),
+    (2, 1), (2, -1), (-2, 1), (-2, -1),
+    (1, 2), (-1, 2), (1, -2), (-1, -2),
+    (3, 1), (3, -1), (-3, 1), (-3, -1),
+    (4, 1), (4, -1), (-4, 1), (-4, -1)
+]
+DIR_OF_MOVEMENT = DOF20_MOVEMENT
 
 START_SYMBOL = 'S'
 END_SYMBOL = 'E'
 PATH_SYMBOL = '#'
 EMPTY_SYMBOL = '.'
 VISITED_SYMBOL = '-'
+
 
 def TimeoutAndMonitor(func):
     def function_wrapper(*args):
@@ -33,7 +55,7 @@ def TimeoutAndMonitor(func):
             return min_dist, min_path
         finally:
             end_time = round(time.time() - start_time, 3)
-            print(f"{func.__name__:<8}\tmin_dist: {round(min_dist, 2)}\tRT: {end_time}s")
+            print(f"{func.__name__:<8}\tmin_dist: {min_dist:.2f}\tRT: {end_time:.3f}s")
         return -1, []
     return function_wrapper
 
@@ -91,7 +113,7 @@ def BFS(grid, start, end):
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                nD = seen[(cX, cY)][0] + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
+                nD = seen[(cX, cY)][0] + math.sqrt(dX ** 2 + dY ** 2) * grid[nY][nX]
                 if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     seen[(nX, nY)] = (nD, (cX, cY))
                     q.append((nX, nY, cX, cY))
@@ -131,7 +153,7 @@ def Dijkstra(grid, start, end):
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                nD = cD + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
+                nD = cD + math.sqrt(dX ** 2 + dY ** 2) * grid[nY][nX]
                 if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     heapq.heappush(h, (nD, nX, nY, cX, cY))
 
@@ -143,8 +165,7 @@ def manhattan_distance(x1, y1, x2, y2):
 
 
 def euclidean_distance(x1, y1, x2, y2):
-    return (x1 - x2) ** 2 + (y1 - y2) ** 2
-    # return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 
 @TimeoutAndMonitor
@@ -159,7 +180,7 @@ def Astar(grid, start, end):
     if start == end:
         raise Exception("Start and end point overlap")
     
-    heuristic = manhattan_distance if DIR_OF_MOVEMENT == EUCLIDEAN_MOVEMENT else euclidean_distance
+    heuristic = manhattan_distance if DIR_OF_MOVEMENT == MANHATTAN_MOVEMENT else euclidean_distance
     initial_heuristic = heuristic(sX, sY, eX, eY)
     # Initialize the queue with the start position
     h = [] # Format: (heuristic, distance, x, y, previous_x, previous_y)
@@ -181,7 +202,7 @@ def Astar(grid, start, end):
         for dX, dY in DIR_OF_MOVEMENT:
             nX, nY = cX + dX, cY + dY
             if 0 <= nX < N and 0 <= nY < M:
-                nD = cD + (math.sqrt(2) * grid[nY][nX] if dX != 0 and dY != 0 else grid[nY][nX])
+                nD = cD + math.sqrt(dX ** 2 + dY ** 2) * grid[nY][nX]
                 total_cost = nD + heuristic(nX, nY, eX, eY)
                 if (nX, nY) not in seen or nD < seen[(nX, nY)][0]:
                     heapq.heappush(h, (total_cost, nD, nX, nY, cX, cY))

@@ -108,12 +108,12 @@ if __name__ == "__main__":
     x_bound = (0, 10)
     y_bound = (-10, 10)
 
-    speed_in_water = 2
     speed_in_sand = 6
+    speed_in_water = 2
     start_point = (2, -8)
     end_point = (8, 4)
-    
-    
+
+
     mp_middle_point = ((start_point[0] + end_point[0]) / 2, 0)
     mp_min_total_time = time_for_journey(start_point, mp_middle_point, end_point, speed_in_sand, speed_in_water)
     bs_middle_point, bs_min_total_time = binary_search_min_time(start_point, end_point, x_bound, speed_in_sand, speed_in_water)
@@ -157,11 +157,22 @@ if __name__ == "__main__":
             [start_point[1], ds_middle_point[1], end_point[1]], 
             'm--', label=f'Derivitive solution path - {ds_min_total_time:.4f}')
     
+ 
     # Fill area under and above the x-axis (Ox)
     x = np.linspace(*x_bound)
     ax.fill_between(x, 0, y_bound[1], facecolor='blue', alpha=0.3, interpolate=True)
     ax.fill_between(x, y_bound[0], 0, facecolor='orange', alpha=0.3, interpolate=True)
 
+    # Write speed in coresponding terrains
+    plt.text(0.9, 0.95, f'Speed in water: {speed_in_water}',
+     horizontalalignment='center',
+     verticalalignment='center',
+     transform = ax.transAxes)
+    plt.text(0.9, 0.05, f'Speed in sand: {speed_in_sand}',
+     horizontalalignment='center',
+     verticalalignment='center',
+     transform = ax.transAxes)
+    
     # Set settings
     plt.xlim(x_bound)
     plt.ylim(y_bound)
@@ -169,6 +180,4 @@ if __name__ == "__main__":
     plt.ylabel('Y-axis')
     plt.title('Graph with approximate solutions and endpoints')
     plt.legend()
-
-
     plt.show()

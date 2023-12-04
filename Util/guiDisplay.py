@@ -20,6 +20,10 @@ class App(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.widgets()
         
+        
+    # def __del__(self):
+    #     self.destroy()
+        
     
     def widgets(self):
         # style variables

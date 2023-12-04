@@ -11,7 +11,7 @@ DIR_PATH = os.path.dirname(os.path.realpath(__file__)).replace('\\', '/')
 INPUT_IMAGE_PATH  = "input_images/"
 OUTPUT_IMAGE_PATH = "output_images/"
 
-def getGridFromImg(image_path, cell_len):
+def getGridFromImg(image_path, cell_len=1):
     s = (-1, -1)
     e = (-1, -1)
 
@@ -62,11 +62,12 @@ def saveUpdatedImgFromGrid(min_path, new_img_pixels, algo_type):
 
 
 if __name__ == "__main__":
+    CELL_SIZE = 1
     for filename in os.listdir(INPUT_IMAGE_PATH):
         if filename.endswith('.png'):
             img_path = os.path.join(INPUT_IMAGE_PATH, filename)
-
-            grid, start, end, new_img_pixels = getGridFromImg(img_path, 5)
+            grid, start, end, new_img_pixels = getGridFromImg(img_path, CELL_SIZE)
+            print(f"Proccessing: {img_path}")
             
             min_dist, min_path = Util.gridSolver.BFS(grid, start, end)
             img_path_1 = saveUpdatedImgFromGrid(min_path, new_img_pixels, "BFS")
@@ -76,10 +77,6 @@ if __name__ == "__main__":
 
             min_dist, min_path = Util.gridSolver.Astar(grid, start, end)
             img_path_3 = saveUpdatedImgFromGrid(min_path, new_img_pixels, "Astar")
-            
-            # Util.gridSolver.printGrid(grid)
-            # print(f"Proccessing: {img_path}")
-            # print(img_path_1, img_path_2, img_path_3, sep='\n')
             
             try:
                 app = Util.guiDisplay.App()
